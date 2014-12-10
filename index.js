@@ -21,9 +21,16 @@ var server = function() {
     app.use("/static", express.static(applicationRoot + 'static'));
 
     app.get('/', function(req, res, next) {
-        calendar.get('PNHU7IO');
+        calendar
+            .get('PNHU7IO')
+            .then(function() {
+                return res.render('index.hbs');
+            })
+            .catch(function(error) {
+                console.log(error);
 
-        return res.render('index.hbs');
+                return res.render('index.hbs');
+            });
     });
 
     return {
