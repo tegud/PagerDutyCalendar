@@ -24,7 +24,9 @@
     "express": "^4.4.3",
     "hbs": "^2.7.0",
     "lodash": "^2.4.1",
-    "node-uuid": "^1.4.1"
+    "node-uuid": "^1.4.1",
+    "request": "~2.51.0",
+    "bluebird": "~2.3.11"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
