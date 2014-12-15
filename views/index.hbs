@@ -2,18 +2,47 @@
 
 <html>
 <head>
-    <title>Live Status</title>
+    <title>On Call Rota</title>
     <meta name="viewport" content="user-scalable=no, width=device-width"/>
 
     <link href="/static/css/site.css" rel="stylesheet"/>
-    <link href="/static/css/ladda.css" rel="stylesheet"/>
-
 
     <link rel="stylesheet" href="/static/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="/static/css/site.css"/>
 
 </head>
 <body>
+
+<table id="schedule-table">
+	<tr>
+		<th class="date-cell" rowspan="2">Date</th>
+		{{#headers}}
+			<th colspan="{{colspan}}" class="ooh-cell end-of-group" style="background-color: {{cellColor}}">{{name}}</th>
+		{{/headers}}
+	</tr>
+	<tr>
+		{{#peopleHeaders}}
+			<th class="person-header ooh-cell{{#endOfGroup}} end-of-group{{/endOfGroup}}" style="background-color: {{cellColor}}"><div class="text">{{name}}</div></th>
+		{{/peopleHeaders}}
+	</tr>
+	<tr class="schedule-row">
+		<th class="date-cell">13 Dec 2014</th>
+		{{#peopleHeaders}}
+		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>&nbsp;</td>
+		{{/peopleHeaders}}
+	</tr>
+	<tr class="schedule-row">
+		<th class="date-cell">13 Dec 2014</th>
+		{{#peopleHeaders}}
+		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>&nbsp;</td>
+		{{/peopleHeaders}}
+	</tr>
+	<tr class="schedule-row">
+		<th class="date-cell">13 Dec 2014</th>
+		{{#peopleHeaders}}
+		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>&nbsp;</td>
+		{{/peopleHeaders}}
+	</tr>
+</table>
 
 <!-- build:js /static/js/app.js -->
 <script type="text/javascript" src="/static/js/lib/lodash.js"></script>
@@ -27,7 +56,12 @@
 
 <script type="text/javascript">
     (function () {
-        
+        var x = $('#schedule-table tr:eq(1) th div').each(function() {
+        	var textDiv = $(this);
+        	if(textDiv.height() < 36) {
+        		textDiv.html(textDiv.html().replace(' ', '<br />'));
+        	}
+        });
     })();
 </script>
 

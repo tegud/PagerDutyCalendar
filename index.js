@@ -21,16 +21,98 @@ var server = function() {
     app.use("/static", express.static(applicationRoot + 'static'));
 
     app.get('/', function(req, res, next) {
-        calendar
-            .get('PNHU7IO')
-            .then(function() {
-                return res.render('index.hbs');
-            })
-            .catch(function(error) {
-                console.log(error);
+        //calendar
+        //    .get('PNHU7IO')
+        //    .then(function(data) {
+                var scheduleGroups = [
+                    {
+                        name: 'Level 1 - Duty Manager',
+                        color: '#f00',
+                        members: [
+                            'Duty Manager 1',
+                            'Duty Manager 2',
+                            'Duty Manager 3',
+                            'Duty Manager 4'
+                        ]
+                    },
+                    {
+                        name: 'Level 2 - Database Support',
+                        color: '#B3A2C7',
+                        members: [
+                            'Database 1',
+                            'Database 2'
+                        ]
+                    },
+                    {
+                        name: 'Level 2 - System Support',
+                        color: '#00B050',
+                        members: [
+                            'System 1',
+                            'System 2'
+                        ]
+                    },
+                    {
+                        name: 'Level 2 - Network Support',
+                        color: '#92D050',
+                        members: [
+                            'Network 1',
+                            'Network 2'
+                        ]
+                    },
+                    {
+                        name: 'Level 2 - Application Support',
+                        color: '#00B0F0',
+                        members: [
+                            'Application 1',
+                            'Application 2'
+                        ]
+                    },
+                    {
+                        name: 'Level 3',
+                        color: '#FF66FF',
+                        members: [
+                            'Level 3 1',
+                            'Level 3 2'
+                        ]
+                    },
+                    {
+                        name: 'Level 4',
+                        color: '#FF9966',
+                        members: [
+                            'Level 4'
+                        ]
+                    }
+                ];
 
-                return res.render('index.hbs');
-            });
+                var headers = _.map(scheduleGroups, function(group) {
+                    return {
+                        name: group.name,
+                        colspan: group.members.length,
+                        spansMultiple: group.members.length > 1,
+                        cellColor: group.color
+                    };
+                });
+
+                var peopleHeaders = _.reduce(scheduleGroups, function(memo, group) {
+                    return memo.concat(_.map(group.members, function(member, i) {
+                        return {
+                            name: member,
+                            endOfGroup: i === group.members.length - 1,
+                            cellColor: group.color
+                        };
+                    }));
+                }, []);
+
+                return res.render('index.hbs', {
+                    headers: headers,
+                    peopleHeaders: peopleHeaders
+                });
+            // })
+            // .catch(function(error) {
+            //     console.log(error);
+
+            //     return res.render('index.hbs');
+            // });
     });
 
     return {
