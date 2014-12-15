@@ -24,24 +24,14 @@
 			<th class="person-header ooh-cell{{#endOfGroup}} end-of-group{{/endOfGroup}}" style="background-color: {{cellColor}}"><div class="text">{{name}}</div></th>
 		{{/peopleHeaders}}
 	</tr>
+	{{#rows}}
 	<tr class="schedule-row">
-		<th class="date-cell">13 Dec 2014</th>
-		{{#peopleHeaders}}
-		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>&nbsp;</td>
-		{{/peopleHeaders}}
+		<th class="date-cell">{{date}}</th>
+		{{#cells}}
+		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>{{#isOnCall}}<div class="fa fa-times-circle-o"></div>{{/isOnCall}}</td>
+		{{/cells}}
 	</tr>
-	<tr class="schedule-row">
-		<th class="date-cell">13 Dec 2014</th>
-		{{#peopleHeaders}}
-		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>&nbsp;</td>
-		{{/peopleHeaders}}
-	</tr>
-	<tr class="schedule-row">
-		<th class="date-cell">13 Dec 2014</th>
-		{{#peopleHeaders}}
-		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>&nbsp;</td>
-		{{/peopleHeaders}}
-	</tr>
+	{{/rows}}
 </table>
 
 <!-- build:js /static/js/app.js -->

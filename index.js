@@ -4,6 +4,8 @@ var hbs = require('hbs');
 var http = require('http');
 var async = require('async');
 var _ = require('lodash');
+var moment = require('moment');
+
 var AppServer = require('./lib/AppServer');
 var PagerDutyCalendar = require('./lib/PagerDutyClient/calendar.js');
 
@@ -103,9 +105,27 @@ var server = function() {
                     }));
                 }, []);
 
+                var dates = ['13 dec 2014', '14 dec 2014', '15 dec 2014'];
+
+                var rows = _.map(dates, function(date) {
+                    return {
+                        date: date,
+                        cells: _.reduce(scheduleGroups, function(memo, group) {
+                            return memo.concat(_.map(group.members, function(member, i) {
+                                return {
+                                    endOfGroup: i === group.members.length - 1,
+                                    cellColor: group.color,
+                                    isOnCall: group.members.length === 1
+                                };
+                            }));
+                        }, [])
+                    };
+                });
+
                 return res.render('index.hbs', {
                     headers: headers,
-                    peopleHeaders: peopleHeaders
+                    peopleHeaders: peopleHeaders,
+                    rows: rows
                 });
             // })
             // .catch(function(error) {
