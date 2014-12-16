@@ -9,6 +9,22 @@ var moment = require('moment');
 var AppServer = require('./lib/AppServer');
 var PagerDutyCalendar = require('./lib/PagerDutyClient/calendar.js');
 
+function getDateSet() {
+    var dates = [];
+    var today = moment();
+    var start = moment(today).startOf('month').add(-1, 'months');
+    var end = moment(start).add(3, 'months');
+    var currentDate = moment(start);
+
+    while(end.diff(currentDate) > 0) {
+        dates.push(currentDate);
+
+        currentDate = moment(currentDate).add(1, 'day');
+    }
+
+    return dates;
+}
+
 var server = function() {
     var app = express();
     var httpServer;
@@ -23,9 +39,12 @@ var server = function() {
     app.use("/static", express.static(applicationRoot + 'static'));
 
     app.get('/', function(req, res, next) {
-        //calendar
-        //    .get('PNHU7IO')
-        //    .then(function(data) {
+        calendar
+           .get('PNHU7IO')
+           .then(function(data) {
+                console.log(JSON.stringify(data ,null, 4))
+                var dateSet = getDateSet();
+
                 var scheduleGroups = [
                     {
                         name: 'Level 1 - Duty Manager',
@@ -105,11 +124,9 @@ var server = function() {
                     }));
                 }, []);
 
-                var dates = ['13 dec 2014', '14 dec 2014', '15 dec 2014'];
-
-                var rows = _.map(dates, function(date) {
+                var rows = _.map(dateSet, function(date) {
                     return {
-                        date: date,
+                        date: date.format('ddd DD MMM YYYY'),
                         cells: _.reduce(scheduleGroups, function(memo, group) {
                             return memo.concat(_.map(group.members, function(member, i) {
                                 return {
@@ -127,12 +144,12 @@ var server = function() {
                     peopleHeaders: peopleHeaders,
                     rows: rows
                 });
-            // })
-            // .catch(function(error) {
-            //     console.log(error);
+            })
+            .catch(function(error) {
+                console.log(error);
 
-            //     return res.render('index.hbs');
-            // });
+                return res.render('index.hbs');
+            });
     });
 
     return {
