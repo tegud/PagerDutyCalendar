@@ -42,7 +42,20 @@ var server = function() {
         calendar
            .get('PNHU7IO')
            .then(function(data) {
-                console.log(JSON.stringify(data ,null, 4))
+                console.log(JSON.stringify(data ,null, 4));
+
+                var scheduleLayers = data.schedule.schedule_layers;
+
+                var onCallLayer = _.chain(scheduleLayers).filter(function(layer) {
+                    return _.filter(layer.users, function(user) {
+                        return user.name === 'ITSupport';
+                    }).length === 0;
+                }).first().value();
+
+                var layerStart = moment(onCallLayer.rotation_virtual_start, 'YYYY-MM-DD');
+
+                console.log(layerStart.format('DD MM YYYY'));
+
                 var dateSet = getDateSet();
 
                 var scheduleGroups = [
