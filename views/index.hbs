@@ -51,7 +51,9 @@
 
 <script type="text/javascript">
     (function () {
-        var x = $('#header-table tr:eq(1) th div').each(function() {
+    	$('#schedule-table').css('margin-top', $('#header').height() + 'px');
+
+        $('#header-table tr:eq(1) th div').each(function() {
         	var textDiv = $(this);
         	if(textDiv.height() < 36) {
         		if(textDiv.text().indexOf(' ') > -1) {
