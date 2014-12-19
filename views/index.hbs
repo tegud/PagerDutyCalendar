@@ -49,7 +49,12 @@
         var x = $('#schedule-table tr:eq(1) th div').each(function() {
         	var textDiv = $(this);
         	if(textDiv.height() < 36) {
-        		textDiv.html(textDiv.html().replace(' ', '<br />'));
+        		if(textDiv.text().indexOf(' ') > -1) {
+        			textDiv.html(textDiv.html().replace(' ', '<br />'));
+        		}
+        		else {
+        			textDiv.html('&nbsp;&nbsp;&nbsp;' + textDiv.html());
+        		}
         	}
         });
     })();
