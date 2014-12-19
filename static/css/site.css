@@ -1,22 +1,30 @@
 body { font-family: arial; padding: 0;margin: 0 }
 
+#header { position: fixed;top: 0; left:0; }
+
+#schedule-table { margin-top: 188px; }
+
 table { border-collapse: collapse; }
 
 table td,
-table th { padding: 3px; }
+table th { padding: 3px; width: 60px; }
 
 th.ooh-cell,
 td { border-bottom: 1px solid #000; border-right: 1px solid #000; }
 
-.person-header { width: 90px; height: 120px; position: relative; }
+.person-header { height: 120px; position: relative; }
 
 .person-header .text { width: 100px; -webkit-transform: rotate(-90deg);-moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -webkit-transform-origin: 25% 25%; -moz-transform-origin: 25% 25%; -o-transform-origin: 25% 25%; transform-origin: 25% 25%; text-align: left; position: absolute; bottom: 10px; left: 0px; }
+
+.header-date { border-bottom: 1px solid #fff; background-color: #fff }
+
+.header-date-text-cell { background-color: #fff }
 
 .date-cell { width: 140px; border-right: 3px solid #000; border-bottom: 1px solid #000; }
 
 th.end-of-group,
 .end-of-group { border-right: 3px solid #000; }
 
-.schedule-row td { height: 40px;text-align: center; font-size: 2em; padding: 0; }
+.schedule-row td { height: 40px;text-align: center; font-size: 2em; padding: 0 3px; }
 
 .schedule-row td div { margin: 5px auto 0 auto; }

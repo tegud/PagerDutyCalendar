@@ -12,18 +12,23 @@
 </head>
 <body>
 
+<div id="header">
+	<table id="header-table">
+		<tr>
+			<th class="date-cell header-date">&nbsp;</th>
+			{{#headers}}
+				<th colspan="{{colspan}}" class="ooh-cell end-of-group" style="background-color: {{cellColor}}">{{name}}</th>
+			{{/headers}}
+		</tr>
+		<tr>
+			<th class="date-cell header-date-text-cell">Date</th>
+			{{#peopleHeaders}}
+				<th class="person-header ooh-cell{{#endOfGroup}} end-of-group{{/endOfGroup}}" style="background-color: {{cellColor}}"><div class="text">{{name}}</div></th>
+			{{/peopleHeaders}}
+		</tr>
+	</table>
+</div>
 <table id="schedule-table">
-	<tr>
-		<th class="date-cell" rowspan="2">Date</th>
-		{{#headers}}
-			<th colspan="{{colspan}}" class="ooh-cell end-of-group" style="background-color: {{cellColor}}">{{name}}</th>
-		{{/headers}}
-	</tr>
-	<tr>
-		{{#peopleHeaders}}
-			<th class="person-header ooh-cell{{#endOfGroup}} end-of-group{{/endOfGroup}}" style="background-color: {{cellColor}}"><div class="text">{{name}}</div></th>
-		{{/peopleHeaders}}
-	</tr>
 	{{#rows}}
 	<tr class="schedule-row">
 		<th class="date-cell">{{date}}</th>
@@ -46,7 +51,7 @@
 
 <script type="text/javascript">
     (function () {
-        var x = $('#schedule-table tr:eq(1) th div').each(function() {
+        var x = $('#header-table tr:eq(1) th div').each(function() {
         	var textDiv = $(this);
         	if(textDiv.height() < 36) {
         		if(textDiv.text().indexOf(' ') > -1) {
