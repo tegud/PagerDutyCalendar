@@ -27,4 +27,7 @@ th.end-of-group,
 
 .schedule-row td { height: 40px;text-align: center; font-size: 2em; padding: 0 3px; }
 
+.schedule-row.today td,
+.schedule-row.today .date-cell { border-bottom: 3px solid #000; border-top: 3px solid #000; background-color: skyblue }
+
 .schedule-row td div { margin: 5px auto 0 auto; }

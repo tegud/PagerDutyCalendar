@@ -30,7 +30,7 @@
 </div>
 <table id="schedule-table">
 	{{#rows}}
-	<tr class="schedule-row">
+	<tr class="schedule-row{{#isToday}} today{{/isToday}}{{#isFocus}} focus{{/isFocus}}">
 		<th class="date-cell">{{date}}</th>
 		{{#cells}}
 		<td{{#endOfGroup}} class="end-of-group"{{/endOfGroup}}{{#isOnCall}} style="background-color: {{cellColor}}"{{/isOnCall}}>{{#isOnCall}}<div class="fa fa-times-circle-o"></div>{{/isOnCall}}</td>
@@ -51,7 +51,8 @@
 
 <script type="text/javascript">
     (function () {
-    	$('#schedule-table').css('margin-top', $('#header').height() + 'px');
+    	var headerHeight = $('#header').height();
+    	var scheduleTable = $('#schedule-table').css('margin-top', headerHeight + 'px');
 
         $('#header-table tr:eq(1) th div').each(function() {
         	var textDiv = $(this);
@@ -64,6 +65,8 @@
         		}
         	}
         });
+
+        window.scrollBy(0, $('.focus', scheduleTable).position().top - headerHeight);
     })();
 </script>
 

@@ -218,5 +218,6 @@ node_modules/
 .idea/
 
 credentials.json
+schedules.json
 
 dist/

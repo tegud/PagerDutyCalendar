@@ -35,6 +35,7 @@ var server = function() {
     var sync;
     var applicationRoot = __dirname + (process.env.NODE_ENV === 'dev' ? '/' : '/dist/');
     var credentials;
+    var schedules;
     var calendar;
 
     app.set('view engine', 'html');
@@ -44,126 +45,109 @@ var server = function() {
 
     app.get('/', function(req, res, next) {
         var dateSet = getDateSet();
+        var focusDate = moment().startOf('isoWeek');
+        var scheduleMappers = {
+            pagerduty: function(config, dates) {
+                return new Promise(function(resolve, reject) {
+                    Promise.all([
+                        calendar.get(config.scheduleId),
+                        calendar.getOverrides(config.scheduleId, dates[0].format('YYYY-MM-DD'), dates[dates.length - 1].format('YYYY-MM-DD'))
+                    ]).then(function(results) {
+                        var data = results[0];
+                        var overrides = _.map(results[1].overrides, function(override) {
+                            return {
+                                start: moment(override.start, 'YYYY-MM-DD'),
+                                end: moment(override.end, 'YYYY-MM-DD'),
+                                user: override.user
+                            }
+                        });
 
-        Promise.all([
-                calendar.get('PNHU7IO'),
-                calendar.getOverrides('PNHU7IO', dateSet[0].format('YYYY-MM-DD'), dateSet[dateSet.length - 1].format('YYYY-MM-DD'))
-            ])
-           .then(function(results) {
-                var data = results[0];
-                var overrides = _.map(results[1].overrides, function(override) {
-                    return {
-                        start: moment(override.start, 'YYYY-MM-DD'),
-                        end: moment(override.end, 'YYYY-MM-DD'),
-                        user: override.user
-                    }
+                        var scheduleLayers = data.schedule.schedule_layers;
+                        var relevantLayer = _.chain(scheduleLayers).filter(function(layer) {
+                            return _.contains(config.layers, layer.id);
+                        }).first().value();
+                        var rotationUsers = relevantLayer.users;
+                        var rotationUserIds = _.map(rotationUsers, function(user) { return user.user.id; });
+                        var allUsers = rotationUsers.concat(_.chain(overrides).pluck('user').groupBy('id').map(function(array, key) {
+                            return array[0];
+                        }).filter(function(user) {
+                            return !_.contains(rotationUserIds, user.id);
+                        }).map(function(user) {
+                            return { user: user };
+                        }).value());
+                        var layerStart = moment(relevantLayer.rotation_virtual_start, 'YYYY-MM-DD');
+                        var rotationLengthInDays = relevantLayer.rotation_turn_length_seconds / 60 / 60 / 24;
+                        var offSet = dateSet[0].diff(layerStart, 'days');
+
+                        var onCallAllocation = _.map(dates, function(date, i) {
+                            var validOverride = _.chain(overrides).filter(function(override) {
+                                return date.diff(override.start) >= 0
+                                    && date.diff(override.end) < 0;
+                            }).first().value();
+                            var onCallUserIndex = Math.floor((i + offSet) / rotationLengthInDays) % rotationUsers.length;
+
+                            if(validOverride) {
+                                var matchedUser = _.chain(allUsers).map(function(user) { return user.user.id; }).indexOf(validOverride.user.id).value();
+
+                                onCallUserIndex = matchedUser;
+                            }
+
+                            return {
+                                date: date,
+                                index: i,
+                                onCall: onCallUserIndex
+                            };
+                        });
+
+                        resolve({
+                            name: config.name,
+                            color: config.color,
+                            members: _.map(allUsers, function(user, memberIndex) {
+                                return {
+                                    name: user.user.name,
+                                    email: user.user.email,
+                                    dates: _.map(dates, function(date, dateIndex) {
+                                        return {
+                                            date: date,
+                                            onCall: onCallAllocation[dateIndex].onCall === memberIndex
+                                        }
+                                    })
+                                };
+                            })
+                        });
+                    }, reject);
                 });
-
-                console.log(JSON.stringify(overrides ,null, 4));
-
-                var scheduleLayers = data.schedule.schedule_layers;
-
-                var onCallLayer = _.chain(scheduleLayers).filter(function(layer) {
-                    return _.filter(layer.users, function(user) {
-                        return user.user.name === 'ITSupport';
-                    }).length === 0;
-                }).first().value();
-
-                var rotationUsers = onCallLayer.users;
-                var rotationUserIds = _.map(rotationUsers, function(user) { return user.user.id; });
-                var allUsers = rotationUsers.concat(_.chain(overrides).pluck('user').groupBy('id').map(function(array, key) {
-                    return array[0];
-                }).filter(function(user) {
-                    return !_.contains(rotationUserIds, user.id);
-                }).map(function(user) {
-                    return { user: user };
-                }).value());
-
-                var layerStart = moment(onCallLayer.rotation_virtual_start, 'YYYY-MM-DD');
-                var rotationLengthInDays = onCallLayer.rotation_turn_length_seconds / 60 / 60 / 24;
-                var offSet = dateSet[0].diff(layerStart, 'days');
-
-                var onCallAllocation = _.map(dateSet, function(date, i) {
-                    var validOverride = _.chain(overrides).filter(function(override) {
-                        return date.diff(override.start) >= 0
-                            && date.diff(override.end) < 0;
-                    }).first().value();
-                    var onCallUserIndex = Math.floor((i + offSet) / rotationLengthInDays) % rotationUsers.length;
-
-                    if(validOverride) {
-                        var matchedUser = _.chain(allUsers).map(function(user) { return user.user.id; }).indexOf(validOverride.user.id).value();
-
-                        onCallUserIndex = matchedUser;
-                    }
-
+            },
+            default: function(config, dates) {
+                var members = _.map(config.members, function(member) {
                     return {
-                        date: date,
-                        index: i,
-                        onCall: onCallUserIndex
+                        name: member
                     };
                 });
 
-                function isOnCall(dateIndex, memberIndex) {
-                    return onCallAllocation[dateIndex].onCall === memberIndex;
+                if(members.length === 1) {
+                    members[0].dates = _.map(dates, function(date) {
+                        return {
+                            date: date,
+                            onCall: true
+                        }
+                    });
                 }
 
-                var scheduleGroups = [
-                    {
-                        name: 'Level 1 - Duty Manager',
-                        color: '#f00',
-                        members: _.map(allUsers, function(user) { return user.user.name; })
-                    },
-                    {
-                        name: 'Level 2 - Database Support',
-                        color: '#B3A2C7',
-                        members: [
-                            'Database 1',
-                            'Database 2'
-                        ]
-                    },
-                    {
-                        name: 'Level 2 - System Support',
-                        color: '#00B050',
-                        members: [
-                            'System 1',
-                            'System 2'
-                        ]
-                    },
-                    {
-                        name: 'Level 2 - Network Support',
-                        color: '#92D050',
-                        members: [
-                            'Network 1',
-                            'Network 2'
-                        ]
-                    },
-                    {
-                        name: 'Level 2 - Application Support',
-                        color: '#00B0F0',
-                        members: [
-                            'Application 1',
-                            'Application 2'
-                        ]
-                    },
-                    {
-                        name: 'Level 3',
-                        color: '#FF66FF',
-                        members: [
-                            'Level 3 1',
-                            'Level 3 2'
-                        ]
-                    },
-                    {
-                        name: 'Level 4',
-                        color: '#FF9966',
-                        members: [
-                            'Level 4'
-                        ]
-                    }
-                ];
+                return new Promise(function(resolve, reject) {
+                    resolve({
+                        name: config.name,
+                        color: config.color,
+                        members: members
+                    });
+                });
+            }
+        };
 
-
-
+        Promise.all(_.map(schedules, function(scheduleConfig) {
+                return scheduleMappers[scheduleConfig.type || 'default'](scheduleConfig, dateSet);
+            }))
+            .then(function(scheduleGroups) {
                 var headers = _.map(scheduleGroups, function(group) {
                     return {
                         name: group.name,
@@ -176,7 +160,7 @@ var server = function() {
                 var peopleHeaders = _.reduce(scheduleGroups, function(memo, group) {
                     return memo.concat(_.map(group.members, function(member, i) {
                         return {
-                            name: member,
+                            name: member.name,
                             endOfGroup: i === group.members.length - 1,
                             cellColor: group.color
                         };
@@ -185,19 +169,15 @@ var server = function() {
 
                 var rows = _.map(dateSet, function(date, dateIndex) {
                     return {
+                        isToday: date.format('DDMMYYYY') === moment().format('DDMMYYYY'),
+                        isFocus: date.format('DDMMYYYY') === focusDate.format('DDMMYYYY'),
                         date: date.format('ddd DD MMM YYYY'),
                         cells: _.reduce(scheduleGroups, function(memo, group) {
                             return memo.concat(_.map(group.members, function(member, memberIndex) {
-                                var isOnCallThisDay = group.members.length === 1;
-
-                                if(group.name === 'Level 1 - Duty Manager') {
-                                    isOnCallThisDay = isOnCall(dateIndex, memberIndex);
-                                }
-
                                 return {
                                     endOfGroup: memberIndex === group.members.length - 1,
                                     cellColor: group.color,
-                                    isOnCall: isOnCallThisDay
+                                    isOnCall: member.dates[dateIndex].onCall
                                 };
                             }));
                         }, [])
@@ -222,11 +202,13 @@ var server = function() {
             httpServer = new AppServer(app, options);
 
             async.waterfall([
-                    function(callback) {
-                        fs.readFile(__dirname + '/credentials.json', 'utf-8', callback);
-                    },
-                    function(contents, callback) {
-                        credentials = JSON.parse(contents);
+                    async.apply(async.parallel, [
+                        async.apply(fs.readFile, __dirname + '/credentials.json', 'utf-8'),
+                        async.apply(fs.readFile, __dirname + '/schedules.json', 'utf-8')
+                    ]),
+                    function(results, callback) {
+                        credentials = JSON.parse(results[0]);
+                        schedules = JSON.parse(results[1]);
 
                         calendar = new PagerDutyCalendar({
                             apiKey: credentials.apiKey,
