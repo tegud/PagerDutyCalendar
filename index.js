@@ -148,14 +148,16 @@ var server = function() {
                 return scheduleMappers[scheduleConfig.type || 'default'](scheduleConfig, dateSet);
             }))
             .then(function(scheduleGroups) {
-                var headers = _.map(scheduleGroups, function(group) {
+                var headers = _.chain(scheduleGroups).filter(function(group) {
+                    return group.members.length > 0;
+                }).map(function(group) {
                     return {
                         name: group.name,
                         colspan: group.members.length,
                         spansMultiple: group.members.length > 1,
                         cellColor: group.color
                     };
-                });
+                }).value();
 
                 var peopleHeaders = _.reduce(scheduleGroups, function(memo, group) {
                     return memo.concat(_.map(group.members, function(member, i) {
@@ -165,7 +167,7 @@ var server = function() {
                             cellColor: group.color
                         };
                     }));
-                }, []);
+                }, []).value();
 
                 var rows = _.map(dateSet, function(date, dateIndex) {
                     return {
