@@ -39,6 +39,20 @@
 	{{/rows}}
 </table>
 
+<div id="oncall-info">
+	<div class="jump-to-this-week">
+		<div class="fa fa-calendar-o"></div>
+		Goto This Week
+	</div>
+
+	<h2>On Call for today, {{todaysDate}}</h2>
+	<ul class="oncall-today-list">
+	{{#onCallToday}}
+		<li style="background-color: {{color}}">{{groupName}}:<br />{{userName}}</li>
+	{{/onCallToday}}
+	</ul>
+</div>
+
 <!-- build:js /static/js/app.js -->
 <script type="text/javascript" src="/static/js/lib/lodash.js"></script>
 <script type="text/javascript" src="/static/js/lib/mustache.js"></script>
@@ -66,7 +80,14 @@
         	}
         });
 
-        window.scrollBy(0, $('.focus', scheduleTable).position().top - headerHeight);
+        var jumpToThisWeek = function() {
+	        window.scroll(0, $('.focus', scheduleTable).position().top - headerHeight);
+        };
+
+        jumpToThisWeek();
+
+        $('.jump-to-this-week').on('click', jumpToThisWeek);
+
     })();
 </script>
 

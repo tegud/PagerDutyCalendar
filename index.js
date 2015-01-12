@@ -55,6 +55,15 @@ var server = function() {
                 return scheduleMappers[scheduleConfig.type || 'default'](scheduleConfig, dateSet);
             }))
             .then(function(scheduleGroups) {
+                function correctName(name) {
+                    var memberNameSegments = name.split(' ');
+                    var memberName = _.map(memberNameSegments, function(segment) {
+                        return segment[0].toUpperCase() + segment.substring(1);
+                    }).join(' ');
+
+                    return memberName;
+                }
+
                 var headers = _.chain(scheduleGroups).filter(function(group) {
                     return group.members.length > 0;
                 }).map(function(group) {
@@ -68,21 +77,35 @@ var server = function() {
 
                 var peopleHeaders = _.reduce(scheduleGroups, function(memo, group) {
                     return memo.concat(_.map(group.members, function(member, i) {
+                        var memberName = correctName(member.name);
+                        
                         return {
-                            name: member.name,
+                            name: memberName,
                             endOfGroup: i === group.members.length - 1,
                             cellColor: group.color
                         };
                     }));
                 }, []);
 
+                var onCallToday = [];
+
                 var rows = _.map(dateSet, function(date, dateIndex) {
+                    var isToday = date.format('DDMMYYYY') === moment().format('DDMMYYYY');
+
                     return {
-                        isToday: date.format('DDMMYYYY') === moment().format('DDMMYYYY'),
+                        isToday: isToday,
                         isFocus: date.format('DDMMYYYY') === focusDate.format('DDMMYYYY'),
                         date: date.format('ddd DD MMM YYYY'),
                         cells: _.reduce(scheduleGroups, function(memo, group) {
                             return memo.concat(_.map(group.members, function(member, memberIndex) {
+                                if(isToday && member.dates[dateIndex].onCall) {
+                                    onCallToday.push({
+                                        groupName: group.name,
+                                        color: group.color,
+                                        userName: correctName(member.name)
+                                    });
+                                }
+
                                 return {
                                     endOfGroup: memberIndex === group.members.length - 1,
                                     cellColor: group.color,
@@ -96,7 +119,8 @@ var server = function() {
                 return res.render('index.hbs', {
                     headers: headers,
                     peopleHeaders: peopleHeaders,
-                    rows: rows
+                    rows: rows,
+                    onCallToday: onCallToday
                 });
             })
             .catch(function(error) {
