@@ -161,7 +161,7 @@ var server = function() {
 
 if(require.main === module) {
     new server().start({
-        port: 1234
+        port: 1236
     });
 }
 
